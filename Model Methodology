@@ -1,63 +1,269 @@
-Methodology
+Here's a full end-to-end outline to develop the credit_pd_mortgage_uk_ifrs9_adverse_12m_prime_v1 model, aligning with IFRS 9 and incorporating UK mortgage market segmentation and variables.
 
-1. Data Sources
 
-Internal Lending Data: Loan-level monthly performance history (5+ years), covering origination, repayment behavior, delinquencies, and default events.
+---
 
-Bureau Data: Credit score history, utilization metrics, and external delinquencies.
+1. Terms of Reference 
 
-Macroeconomic Variables (UK-specific):
+Objective:
+Estimate 12-month Probability of Default (PD) for UK prime mortgage exposures under adverse macroeconomic conditions, in accordance with IFRS 9.
 
-House Price Index (HPI)
+Model Name:
+credit_pd_mortgage_uk_ifrs9_adverse_12m_prime_v1
+
+Portfolio:
+UK-resident owner-occupied and BTL prime mortgage book
+
+Model Type:
+Hybrid logistic regression (with macro adjustments), potentially with challenger ML models
+
+Time Horizon:
+12-month forward-looking PD
+
+Segments:
+
+Owner-Occupied vs BTL
+
+Repayment vs Interest-Only
+
+Region: London, South East, North West, etc.
+
+Loan Vintage (Origination Year)
+
+Product Type: Fixed vs Variable Rate
+
+First-time buyer (FTB) vs home-mover
+
+Loan Purpose: Purchase vs Remortgage
+
+
+
+---
+
+2. Definition of Default (IFRS 9-aligned)
+
+Calibrated to IFRS 9 standards:
+
+Arrears > 90 days past due
+
+Unlikeliness to pay criteria (e.g., forbearance, bankruptcy, voluntary surrender)
+
+Incorporate probability of cure and backstops for staging
+
+
+
+---
+
+3. Variable Longlist
+
+A. Borrower Characteristics
+
+Age at origination
+
+Employment status
+
+Income type (e.g., salaried, self-employed)
+
+Total household income
+
+Number of dependents
+
+Credit bureau score
+
+Credit card utilisation
+
+Historical delinquencies
+
+
+B. Loan Characteristics
+
+Original LTV
+
+Current LTV
+
+LTI (Loan-to-Income)
+
+Term at origination
+
+Remaining term
+
+Interest rate type (fixed/variable)
+
+Reversion rate margin
+
+Repayment type (repayment vs IO)
+
+Loan size
+
+Purpose (purchase/remortgage)
+
+Number of prior refinances
+
+
+C. Property Attributes
+
+Region (postcode level, bucketed)
+
+Property type (flat, terraced, semi, detached)
+
+New build indicator
+
+Valuation type (AVM vs physical inspection)
+
+
+D. Account Performance
+
+Arrears status (number of missed payments)
+
+Time since last delinquency
+
+Days past due (DPD)
+
+Forbearance flag
+
+Payment holidays (COVID or otherwise)
+
+Recent account activity (voluntary payments, redraws)
+
+
+E. Macroeconomic Variables (linked to adverse scenario)
+
+UK GDP growth (YoY)
 
 Unemployment rate
 
-Bank of England base rate
+HPI (House Price Index)
 
-Real GDP growth
+Interest rate (BoE base rate)
 
-Inflation (CPI)
+CPI inflation
 
-
-
-2. Feature Engineering
-
-Static Features:
-
-LTV at origination, income verification type, term length, geographic region, product type (fixed/variable).
-
-
-Dynamic Features:
-
-Days past due, rolling 3-month payment ratios, utilization changes, LTV recalculated with latest HPI.
-
-
-Macroeconomic Linkages:
-
-Forecast macro series mapped via lagged transformations and interaction terms.
+Consumer confidence index
 
 
 
-3. Model Architecture
+---
 
-Algorithm: LightGBM with class-weighted loss function to handle default imbalance.
+4. Data Preparation
 
-Target Definition: Binary flag for default within the next 12 months.
+Merge loan tape, arrears data, property valuations, macro forecasts
 
-Training/Validation:
+Generate vintage and roll-forward variables
 
-Time-based split ensuring training on pre-COVID periods and validation on more recent adverse outcomes.
+Apply data cleaning rules: missing handling, outlier treatment
 
-AUC: 0.83 | Brier Score: 0.056 | KS Statistic: 42
+Variable transformations (e.g., WoE, binning, log transformations)
 
 
 
-4. Adverse Scenario Calibration
+---
 
-Scenario based on a 2.5% contraction in GDP, a 3 percentage point rise in unemployment, and a 10% fall in HPI.
+5. Segmentation
 
-Macroeconomic variables shocked in line with Bank of England stress paths.
+Initial splits for modeling:
 
-Marginal PD uplift modeled via interaction layers between borrower sensitivity and macro shifts.
+Owner-occupied vs BTL
 
+Repayment vs IO
+
+By LTV band (<60%, 60–80%, 80–90%, 90%+)
+
+Regional clusters (London/South East vs Midlands/North vs Scotland/Wales)
+
+Vintage buckets (pre-2010, 2010–2015, post-2015)
+
+
+
+---
+
+6. Model Development Approach
+
+A. Benchmark Model
+
+Logistic regression with WoE bins
+
+Backward selection (AIC/BIC)
+
+Interactions tested (e.g., LTV × region)
+
+
+B. Challenger Models
+
+XGBoost or LightGBM
+
+Elastic Net Logistic Regression
+
+Ensemble stacking (optional)
+
+
+C. Model Performance
+
+Gini, KS, AUC
+
+Stability Index (PSI) on OOT
+
+Confusion matrix for PD buckets
+
+
+
+---
+
+7. Macroeconomic Overlay (Adverse)
+
+Link macro variables to PD shifts via satellite models
+
+Apply adverse scenario shocks using BoE stress scenarios or internal forecasts
+
+Translate to PD scaling factors (e.g., via error correction or regression-on-residual models)
+
+
+
+---
+
+8. Calibration and Output
+
+Calibrate model outputs to Observed Default Rate (ODR) or Through-the-Cycle (TTC) estimates
+
+Apply IFRS 9 overlays for:
+
+Forward-looking bias
+
+Staging implications
+
+
+Cap PDs where needed (e.g., max cap at 25% for prime)
+
+Ensure monotonicity for risk drivers like LTV, arrears
+
+
+
+---
+
+9. Validation
+
+Out-of-time (OOT) and Out-of-sample (OOS) testing
+
+Independent validation team review
+
+Model documentation (including assumptions, limitations, and use test)
+
+
+
+---
+
+10. Deployment Considerations
+
+Embed in risk engines (SAS, Python, etc.)
+
+Update frequency: Quarterly or semi-annually
+
+Regular monitoring: Performance drift, macro indicator monitoring
+
+Recalibration process defined (at least annually)
+
+
+
+---
+
+Would you like this packaged as a regulatory model development document or Python code to begin development?
 
