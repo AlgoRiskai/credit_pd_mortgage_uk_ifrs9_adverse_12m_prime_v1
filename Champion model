@@ -1,0 +1,11 @@
+# Logistic Regression Model
+log_model = LogisticRegression(max_iter=500)
+log_model.fit(X_train, y_train)
+
+# Predictions & evaluation
+y_pred_prob = log_model.predict_proba(X_test)[:, 1]
+auc_score = roc_auc_score(y_test, y_pred_prob)
+conf_matrix = confusion_matrix(y_test, log_model.predict(X_test))
+
+print(f"AUC Score: {auc_score}")
+print(f"Confusion Matrix:\n{conf_matrix}")
