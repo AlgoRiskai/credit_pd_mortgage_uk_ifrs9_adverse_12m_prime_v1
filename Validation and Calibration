@@ -1,0 +1,18 @@
+from scipy.stats import ks_2samp
+
+# Stability testing using Population Stability Index (PSI)
+def calculate_psi(expected, actual, bins=10):
+    expected_hist, _ = np.histogram(expected, bins=bins)
+    actual_hist, _ = np.histogram(actual, bins=bins)
+    psi = np.sum((expected_hist - actual_hist) * np.log((expected_hist + 1e-6) / (actual_hist + 1e-6)))
+    return psi
+
+psi_value = calculate_psi(y_train, y_pred_prob)
+print(f"Population Stability Index (PSI): {psi_value}")
+
+# Kolmogorov-Smirnov test for calibration
+ks_stat, _ = ks_2samp(y_train, y_pred_prob)
+print(f"KS Statistic: {ks_stat}")
+
+# Save results
+data.to_csv("final_pd_estimates.csv", index=False)
