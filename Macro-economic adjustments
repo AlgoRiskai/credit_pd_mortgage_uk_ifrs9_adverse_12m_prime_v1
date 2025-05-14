@@ -1,0 +1,8 @@
+# Example macro-adjustment function
+def macro_adjustment(pd_estimate, gdp_growth, unemployment_rate):
+    macro_factor = 1 + (-0.5 * gdp_growth + 0.8 * unemployment_rate)
+    return np.clip(pd_estimate * macro_factor, 0, 0.25)  # Cap at 25% for prime
+
+# Adjust PD predictions
+data["predicted_PD"] = y_pred_gbm
+data["adjusted_PD"] = data.apply(lambda row: macro_adjustment(row["predicted_PD"], row["GDP_growth"], row["unemployment_rate"]), axis=1)
