@@ -1,0 +1,37 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import roc_auc_score, confusion_matrix
+
+# Load dataset
+data = pd.read_csv("mortgage_data.csv")  # Replace with actual dataset
+
+# Selected features (based on variable longlist)
+features = [
+    "age_origination", "employment_status", "income_type", "household_income",
+    "credit_score", "credit_utilisation", "historical_delinquencies", "original_LTV",
+    "current_LTV", "loan_to_income_ratio", "term_origination", "remaining_term",
+    "interest_rate_type", "repayment_type", "loan_size", "property_region",
+    "property_type", "new_build_indicator", "arrears_status", "days_past_due",
+    "forbearance_flag", "GDP_growth", "unemployment_rate", "HPI", "BoE_base_rate",
+    "inflation_rate", "consumer_confidence_index"
+]
+
+X = data[features]
+y = data["default_flag"]  # 1 for default, 0 for non-default
+
+# Handle missing values and scale the features
+preprocessing_pipeline = Pipeline([
+    ("imputer", SimpleImputer(strategy="median")),
+    ("scaler", StandardScaler())
+])
+
+X_processed = preprocessing_pipeline.fit_transform(X)
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X_processed, y, test_size=0.2, random_state=42)
