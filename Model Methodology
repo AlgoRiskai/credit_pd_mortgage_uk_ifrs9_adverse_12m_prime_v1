@@ -1,0 +1,63 @@
+Methodology
+
+1. Data Sources
+
+Internal Lending Data: Loan-level monthly performance history (5+ years), covering origination, repayment behavior, delinquencies, and default events.
+
+Bureau Data: Credit score history, utilization metrics, and external delinquencies.
+
+Macroeconomic Variables (UK-specific):
+
+House Price Index (HPI)
+
+Unemployment rate
+
+Bank of England base rate
+
+Real GDP growth
+
+Inflation (CPI)
+
+
+
+2. Feature Engineering
+
+Static Features:
+
+LTV at origination, income verification type, term length, geographic region, product type (fixed/variable).
+
+
+Dynamic Features:
+
+Days past due, rolling 3-month payment ratios, utilization changes, LTV recalculated with latest HPI.
+
+
+Macroeconomic Linkages:
+
+Forecast macro series mapped via lagged transformations and interaction terms.
+
+
+
+3. Model Architecture
+
+Algorithm: LightGBM with class-weighted loss function to handle default imbalance.
+
+Target Definition: Binary flag for default within the next 12 months.
+
+Training/Validation:
+
+Time-based split ensuring training on pre-COVID periods and validation on more recent adverse outcomes.
+
+AUC: 0.83 | Brier Score: 0.056 | KS Statistic: 42
+
+
+
+4. Adverse Scenario Calibration
+
+Scenario based on a 2.5% contraction in GDP, a 3 percentage point rise in unemployment, and a 10% fall in HPI.
+
+Macroeconomic variables shocked in line with Bank of England stress paths.
+
+Marginal PD uplift modeled via interaction layers between borrower sensitivity and macro shifts.
+
+
